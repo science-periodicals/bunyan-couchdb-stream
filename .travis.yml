@@ -1,0 +1,16 @@
+language: node_js
+node_js:
+  - "0.12"
+  - "iojs-1"
+  - "iojs-2"
+  - "iojs-3"
+services:
+  - couchdb
+env:
+  - COUCH_ADMIN_USERNAME="" COUCH_ADMIN_PASSWORD=""
+script:
+  - npm test
+  - npm run coverage
+  - npm run publish-coverage
+notifications:
+  slack: standardanalytics:vPQA8IowAphWwzDgGtHkdkRk
