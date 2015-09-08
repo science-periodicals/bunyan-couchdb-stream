@@ -19,8 +19,9 @@ LogStream.prototype._write = function(chunk, encoding, callback) {
     if (err) return callback(err);
     if (resp.statusCode >= 400) {
       callback(new Error(body ? body.reason: 'could not POST to CouchDB'));
+    } else {
+      callback(null);
     }
-    callback(null);
   });
 
 }
