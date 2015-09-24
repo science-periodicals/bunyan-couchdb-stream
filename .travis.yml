@@ -4,6 +4,7 @@ node_js:
   - "iojs-1"
   - "iojs-2"
   - "iojs-3"
+  - "4.1"
 services:
   - couchdb
 env:
