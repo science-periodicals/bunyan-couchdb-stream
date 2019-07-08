@@ -1,5 +1,7 @@
 # bunyan-couchdb-stream
 
+[![CircleCI](https://circleci.com/gh/science-periodicals/bunyan-couchdb-stream.svg?style=svg)](https://circleci.com/gh/science-periodicals/bunyan-couchdb-stream)
+
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
 Note: this module is auto published to npm on CircleCI. Only run `npm version
