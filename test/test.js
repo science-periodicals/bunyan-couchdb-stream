@@ -1,9 +1,8 @@
-var assert = require('assert')
-  , bunyan = require('bunyan')
-  , request = require('request')
-  , follow = require('follow')
-  , LogStream = require('..');
-
+var assert = require('assert'),
+  bunyan = require('bunyan'),
+  request = require('request'),
+  follow = require('follow'),
+  LogStream = require('..');
 
 describe('bunyan couchdb stream', function() {
   this.timeout(100000);
@@ -15,56 +14,56 @@ describe('bunyan couchdb stream', function() {
   };
 
   it('should create a DB and write to CouchDB', function(done) {
-
     // we would need to do log.close() to be able to detect the
     // `finish` event of the logStream but the close method is currently
     // commented out see https://github.com/trentm/node-bunyan/issues/192
     // so we use the changes feed to test
 
     (function _follow() {
-
-      var feed = follow({
-        since: 0,
-        db: db,
-        include_docs: true
-      }, function(err, change) {
-        if (err) {
-          if (/no_db_file/.test(err.message)) {
-            return setTimeout(_follow, 500);
-          } else {
-            return console.error(err);
+      var feed = follow(
+        {
+          since: 0,
+          db: db,
+          include_docs: true
+        },
+        function(err, change) {
+          if (err) {
+            if (/no_db_file|Database does not exist/.test(err.message)) {
+              return setTimeout(_follow, 500);
+            } else {
+              return console.error(err);
+            }
           }
+          assert.equal(change.doc.foo, 'bar');
+          assert.equal(change.doc.msg, 'hello world');
+          feed.stop();
+          done();
         }
-        assert.equal(change.doc.foo, 'bar');
-        assert.equal(change.doc.msg, 'hello world');
-        feed.stop();
-        done();
-      });
-
+      );
     })();
-
 
     var log = bunyan.createLogger({
       name: 'test',
-      streams: [{
-        stream: new LogStream(db, {auth: auth}),
-        type: 'raw'
-      }],
+      streams: [
+        {
+          stream: new LogStream(db, { auth: auth }),
+          type: 'raw'
+        }
+      ]
     });
 
-    log.info({foo: 'bar'}, 'hello world');
-
+    log.info({ foo: 'bar' }, 'hello world');
   });
-
 
   after(function(done) {
-    request.del({
-      url: db,
-      auth: auth
-    }, function(err, resp, body) {
-      done();
-    });
+    request.del(
+      {
+        url: db,
+        auth: auth
+      },
+      function(err, resp, body) {
+        done();
+      }
+    );
   });
-
-
 });

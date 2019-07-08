@@ -1,6 +1,6 @@
-var util = require('util')
-  , request = require('request')
-  , Writable = require('stream').Writable;
+var util = require('util'),
+  request = require('request'),
+  Writable = require('stream').Writable;
 
 util.inherits(LogStream, Writable);
 
@@ -10,45 +10,56 @@ function LogStream(db, opts) {
 
   this._createdDb = false;
 
-  Writable.call(this, {objectMode: true});
+  Writable.call(this, { objectMode: true });
 }
 
 LogStream.prototype._write = function(chunk, encoding, callback) {
-  request.post({
-    url: this.db,
-    auth: this.opts.auth,
-    json: chunk
-  }, function(err, resp, body) {
-    if (err) return callback(err);
-    if (resp.statusCode >= 400) {
+  request.post(
+    {
+      url: this.db,
+      auth: this.opts.auth,
+      json: chunk
+    },
+    function(err, resp, body) {
+      if (err) return callback(err);
+      if (resp.statusCode >= 400) {
+        if (
+          !this._createdDb &&
+          resp.statusCode === 404 &&
+          body &&
+          (body.reason === 'no_db_file' ||
+            body.reason.includes('Database does not exist'))
+        ) {
+          // try to create DB
+          request.put(
+            {
+              url: this.db,
+              auth: this.opts.auth,
+              json: true
+            },
+            function(err, resp, body) {
+              this._createdDb = true;
+              if (err) return callback(err);
+              if (resp.statusCode >= 400) {
+                return callback(
+                  new Error(
+                    'Could not create db.' +
+                      (body ? ' ' + (body.reason || body.error) : '')
+                  )
+                );
+              }
 
-      if (!this._createdDb && resp.statusCode === 404 && body && body.reason === 'no_db_file') {
-        // try to create DB
-        request.put({
-          url: this.db,
-          auth: this.opts.auth,
-          json: true
-        }, function(err, resp, body) {
-          this._createdDb = true;
-          if (err) return callback(err);
-          if (resp.statusCode >= 400) {
-            return callback(new Error('Could not create db.' + (body ? (' ' + (body.reason || body.error)) : '')));
-          }
-
-          this._write(chunk, encoding, callback);
-
-        }.bind(this));
-
+              this._write(chunk, encoding, callback);
+            }.bind(this)
+          );
+        } else {
+          callback(new Error(body ? body.reason : 'could not POST to CouchDB'));
+        }
       } else {
-        callback(new Error(body ? body.reason : 'could not POST to CouchDB'));
+        callback(null);
       }
-
-    } else {
-      callback(null);
-    }
-  }.bind(this));
-
-}
-
+    }.bind(this)
+  );
+};
 
 module.exports = LogStream;
