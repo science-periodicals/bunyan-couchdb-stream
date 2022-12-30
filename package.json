@@ -33,7 +33,7 @@
     "@scipe/eslint-config": "^1.0.0",
     "bunyan": "^1.5.1",
     "follow": "^1.1.0",
-    "mocha": "^6.1.4",
+    "mocha": "^10.2.0",
     "prettier": "^1.18.2"
   },
   "dependencies": {
